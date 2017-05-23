@@ -1,0 +1,29 @@
+{
+  "name": "docker-steamy",
+  "version": "1.0.0",
+  "description": "A streaming app for docker service update and stuff",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index",
+    "test": "make test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/Korrd/docker-steamy.git"
+  },
+  "keywords": [
+    "docker",
+    "streaming",
+    "logs"
+  ],
+  "author": "Victor Martin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Korrd/docker-steamy/issues"
+  },
+  "homepage": "https://github.com/Korrd/docker-steamy#readme",
+  "dependencies": {
+    "express": "^4.15.3",
+    "socket.io": "^2.0.1"
+  }
+}
