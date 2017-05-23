@@ -1,23 +1,10 @@
+/**
+ * Init and stuff
+ */
+
 const express = require('express');
 const socketio = require('socket.io');
 const spawn = require('child_process').spawn;
-
-const env = process.env;
-const services = env.SERVICES.split(/[\s\t]/);
-const COMMAND = env.COMMAND.split(/[\s\t]/);
-
-const colors = ['red', 'blue', 'green', 'pink'];
-var cc = 0;
-const serviceColors = {};
-const listeners = services.map((servicename) => {
-	serviceColors[servicename] = serviceColors[servicename] || colors[cc++];
-	return {
-		name: servicename,
-		spawned: spawn(COMMAND[0], COMMAND.slice(1).concat([servicename]))
-	}
-});
-
-console.log(serviceColors);
 
 const app = express();
 
@@ -26,42 +13,71 @@ const io = require('socket.io')(server);
 
 const body = require('fs').readFileSync('./index.html', 'utf8');
 
-
-//forces client to connect as websockets. If client tries xhr polling, it won't connect.
-
 /**
  * Booting express app
  */
 
 app.use(express.static('./static'));
 
-app.get('/', function (req, res, next) {
-  res.status(200).send(body);
+
+app.get('/logs', function (req, res, next) {
+  const msg = 'Error: no serviceId specified. Expecting "/logs/serviceId"';
+
+  console.log('[SERVER] ' + msg);
+  res.status(200).send(msg);
+});
+
+app.get('/logs/:serviceId', function (req, res, next) {
+	var subDomain = req.headers.host.split('.');
+	if (subDomain.length <= 1)
+	{
+	    const msg = 'Unexpected input. No subdomain here';
+		console.log('[SERVER] ' + msg);
+		res.status(200).send(msg);
+	}else{
+		console.log('[SERVER] Endpoint "/logs" hit. Our serviceId is "' + req.params.serviceId + '"');
+		console.log('[SERVER] Our PR service name is "' + subDomain[0].toString() + '"');
+		console.log('[SERVER] Our swarm service name is ' + subDomain[0].toString() + '_' + req.params.serviceId + '"');
+		res.status(200).send(body);
+	}
 });
 
 
-io.set('transports', ['websocket']); 
+// We force our server to use ws only.
+io.set('transports', ['websocket']);
 
 io.on('connection', function(socket) {
-	console.log('websocket connected');
-	listeners.forEach((listener) => {
-		listener.spawned.stdout.on('data', (data) => {
-			socket.emit('stdout', {
-			  servicename: listener.name,
-			  color: serviceColors[listener.name],
-			  data: data.toString()
-			});
-		});
+	console.log('[SERVER] websocket connected');
 
-		listener.spawned.stderr.on('data', (data) => {
-			socket.emit('stderr', {
-			  servicename: listener.name,
-			  color: serviceColors[listener.name],
-			  data: data.toString()
-			});
+	socket.emit('params');
+
+	socket.on('disconnect', function () {
+
+		//cleanup
+		socket.logprocess.kill();
+
+	});
+
+	socket.on('params', function (value) {
+		console.log('[SERVER] Executing command with swarm service name ' + value);
+		 var child = spawn('docker', ['service', 'logs', '-f', '-t', value]);
+
+		 socket.logprocess = child;
+
+		 child.stdout.on('data', (e) => {
+		 	socket.emit('stdout', e.toString());
+		 });
+
+		 child.stdout.on('end', (a) => {
+		 	console.log('end', a)
+		 });
+
+		 child.stdout.on('error', (e) => console.log('error', e));
+		 child.on('error', (e) => console.log('error', e));
+		 child.on('exit', (e) => console.log('exit', e));
+		 child.on('end', (e) => console.log('end', e));
+
 		});
-	})
 });
 
-
-server.listen(3000, () => console.log('server listening'));
+server.listen(3000, () => console.log('[SERVER] listening'));
