@@ -2,8 +2,6 @@ var $main = $('#main');
 
 var socket = io({ transports: ['websocket'], upgrade: false });
 
-var autoscroll = true;
-
 /* Put this inside something more accute */
 const header = $('.header'),
 	  main   = $('#main'),
@@ -29,36 +27,14 @@ socket.on('params', function (serviceId){
 
 socket.on('stdout', function (logText) {
   console.log('[CLIENT STDOUT] Appending to viewport: ' + logText)
-  var objDiv = document.getElementById("main");
-
-  if (objDiv.scrollTop == objDiv.scrollHeight){
-    autoscroll = true;
-  }else{
-    autoscroll = false;
-  }
 
   $main.append(logText);
 
-  if (autoscroll == true){
-	objDiv.scrollTop = objDiv.scrollHeight;
-  }
 });
 
 socket.on('stderr', function (logText) {
   console.log('[CLIENT STDERR] Appending to viewport: ' + logText)
-  var objDiv = document.getElementById("main");
-
-  if (objDiv.scrollTop == objDiv.scrollHeight){
-    autoscroll = true;
-  }else{
-    autoscroll = false;
-  }
 
   $main.append(logText);
-
-  if (autoscroll == true){
-	objDiv.scrollTop = objDiv.scrollHeight;
-  }
-
 
 });
