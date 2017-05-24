@@ -7,7 +7,9 @@ WORKDIR /app
 # Copy app to workdir
 COPY package.json /app/
 COPY index.* /app/
-COPY static/* /app/
+
+RUN mkdir /app/static
+COPY static/* /app/static/
 
 #Install docker 17.05+
 #Edge repo, otherwise it would install docker 1.11 which has no swarm support
