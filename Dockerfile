@@ -1,5 +1,5 @@
-#Lightweight linux
-FROM node:7-alpine
+
+FROM node:7
 
 RUN mkdir -p /app
 WORKDIR /app
