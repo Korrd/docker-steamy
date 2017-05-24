@@ -10,7 +10,9 @@ COPY index.* /app/
 COPY static/ /app/
 
 #Install docker 17.05+
-COPY repositories /etc/apk/ #Edge repo, otherwise it would install docker 1.11 which has no swarm support
+#Edge repo, otherwise it would install docker 1.11 which has no swarm support
+COPY repositories /etc/apk/ 
+
 RUN apk update
 RUN apk add docker
 
